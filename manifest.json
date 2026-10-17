@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "Block AV1",
+  "version": "1.0.0",
+  "description": "Hides the AV1 codec from sites like YouTube so they serve VP9/H.264 instead, which are hardware-decoded on GPUs without AV1 support.",
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*.youtube.com/*",
+        "*://*.youtube-nocookie.com/*",
+        "*://*.youtu.be/*"
+      ],
+      "js": ["block-av1.js"],
+      "run_at": "document_start",
+      "all_frames": true,
+      "world": "MAIN"
+    }
+  ]
+}
