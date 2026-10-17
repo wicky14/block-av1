@@ -11,16 +11,24 @@ decoding for H.264 and VP9 but **not** for AV1. When YouTube sends AV1, the CPU 
 decode it in software, which shows up as high CPU load, stutter on high resolutions,
 and extra heat.
 
-Measured on an Intel i5-8250U + UHD 620 (1080p, ~equal bitrate):
+Measured on an Intel i5-8250U + Intel UHD 620 (Chromium on Wayland, bitrates within
+~1.6x of each other). Median of 3 runs, browser CPU (all processes), playback verified
+as realtime with 0 dropped frames:
 
-| Codec | CPU, normal | CPU, hardware decode forced off | Verdict |
-|---|---|---|---|
-| VP9 1080p | ~45–70% | ~110% | hardware decode works |
-| VP9 1440p | ~43% | ~168% | hardware decode works, no extra cost vs 1080p |
-| H.264 1080p | ~58–86% | ~124% | hardware decode works |
-| **AV1 1080p** | **~115%** | ~118% | **no hardware decode at all** |
+| Codec | CPU, normal | CPU, hardware decode forced off | Ratio | Verdict |
+|---|---|---|---|---|
+| VP9 1080p (5.3 Mbps) | **45%** | 105% | 2.3x | hardware decode works |
+| VP9 1440p (6.1 Mbps) | **39%** | 140% | 3.6x | hardware decode works — and costs no more than 1080p |
+| H.264 1080p (8.6 Mbps) | **44%** | 90% | 2.0x | hardware decode works |
+| **AV1 1080p (8.6 Mbps)** | **97%** | 98% | 1.0x | **no hardware decode at all** |
 
-Disabling AV1 means YouTube picks VP9 instead of paying that 115% CPU tax.
+"Hardware decode forced off" is `--disable-accelerated-video-decode`; the ratio between
+the two columns is the proof of whether a hardware path exists.
+
+Disabling AV1 means the player picks VP9 instead of burning ~97% of a core on AV1
+software decoding — roughly halving CPU use at the same resolution. Note the UHD 620
+handles VP9 **1440p** more cheaply than VP9 1080p here, so blocking AV1 keeps
+above-1080p playback comfortable instead of giving it up.
 
 Blocking **only** AV1 matters: YouTube does not serve H.264 above 1080p, so forcing
 H.264 (what `h264ify` does) would cap you at 1080p. VP9 is available all the way up to
